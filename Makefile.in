@@ -1,0 +1,73 @@
+# General info
+SHELL       = @SHELL@
+prefix      = @prefix@
+exec_prefix = @exec_prefix@
+bindir      = @bindir@
+libdir      = @libdir@
+datadir     = @datadir@
+datarootdir = @datarootdir@
+srcdir      = @srcdir@
+VPATH       = $(srcdir)
+
+# These may be overridden by make invocators
+DESTDIR        =
+GOSH           = "@GOSH@"
+GAUCHE_CONFIG  = "@GAUCHE_CONFIG@"
+GAUCHE_PACKAGE = "@GAUCHE_PACKAGE@"
+INSTALL        = "@GAUCHE_INSTALL@" -C
+
+# Redis Server Path
+REDIS_SERVER = "@REDIS_SERVER@"
+
+# Module-specific stuff
+PACKAGE   = Gauche-redis
+
+SCMFILES  = \
+	$(srcdir)/redis.scm \
+	$(srcdir)/redis/connection.scm \
+	$(srcdir)/redis/protocol.scm
+
+TARGET    =
+GENERATED =
+CONFIG_GENERATED = Makefile config.cache config.log config.status \
+		   configure.lineno autom4te*.cache $(PACKAGE).gpd
+
+GAUCHE_PKGINCDIR  = "$(DESTDIR)@GAUCHE_PKGINCDIR@"
+GAUCHE_PKGLIBDIR  = "$(DESTDIR)@GAUCHE_PKGLIBDIR@"
+GAUCHE_PKGARCHDIR = "$(DESTDIR)@GAUCHE_PKGARCHDIR@"
+
+TEST_DIR= $(srcdir)/test
+TEST_SCMS= \
+	$(TEST_DIR)/protocol.scm \
+	$(TEST_DIR)/connection.scm \
+	$(TEST_DIR)/redis.scm
+TEST_LOG= $(TEST_DIR)/test.log
+
+all : $(TARGET)
+
+check : all
+	@rm -f $(TEST_LOG)
+	@for s in $(TEST_SCMS); do $(GOSH) -I. -I$(srcdir) -I$(TEST_DIR)/lib $$s $(REDIS_SERVER) >> $(TEST_LOG); done
+
+install : all
+	$(INSTALL) -m 444 -T $(GAUCHE_PKGINCDIR) $(HEADERS)
+	$(INSTALL) -m 444 -T $(GAUCHE_PKGLIBDIR) $(SCMFILES)
+	$(INSTALL) -m 555 -T $(GAUCHE_PKGARCHDIR) $(ARCHFILES)
+	$(INSTALL) -m 444 -T $(GAUCHE_PKGLIBDIR)/.packages $(PACKAGE).gpd
+
+uninstall :
+	$(INSTALL) -U $(GAUCHE_PKGINCDIR) $(HEADERS)
+	$(INSTALL) -U $(GAUCHE_PKGLIBDIR) $(SCMFILES)
+	$(INSTALL) -U $(GAUCHE_PKGARCHDIR) $(ARCHFILES)
+	$(INSTALL) -U $(GAUCHE_PKGLIBDIR)/.packages $(PACKAGE).gpd
+
+clean :
+	$(GAUCHE_PACKAGE) compile --clean redis $(redis_SRCS)
+	rm -rf core $(TARGET) $(GENERATED) *~ $(TEST_LOG) so_locations
+
+distclean : clean
+	rm -rf $(CONFIG_GENERATED)
+
+maintainer-clean : clean
+	rm -rf $(CONFIG_GENERATED) configure VERSION
+

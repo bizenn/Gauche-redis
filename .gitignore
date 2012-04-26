@@ -1,0 +1,7 @@
+*.gpd
+Makefile
+VERSION
+autom4te.cache
+config.*
+configure
+*.log
