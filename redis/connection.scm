@@ -24,7 +24,15 @@
       :input-port (socket-input-port socket)
       :output-port (socket-output-port socket))))
 
-(define-method  redis-close ((conn <redis-connection>) . maybe-shutdown?)
+(define-method redis-close ((conn <redis-connection>) . maybe-shutdown?)
   (when (get-optional maybe-shutdown? #t)
     (socket-shutdown (ref conn 'socket)))
   (socket-close (ref conn 'socket)))
+
+(define-method redis-closed? ((conn <redis-connection>))
+  (or (not (slot-bound? conn 'socket))
+      (not (eq? 'connected (socket-status (slot-ref conn 'socket))))
+      (not (slot-bound? conn 'in))
+      (port-closed? (slot-ref conn 'in))
+      (not (slot-bound? conn 'out))
+      (port-closed? (slot-ref conn 'out))))

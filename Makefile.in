@@ -25,7 +25,8 @@ PACKAGE   = Gauche-redis
 SCMFILES  = \
 	$(srcdir)/redis.scm \
 	$(srcdir)/redis/connection.scm \
-	$(srcdir)/redis/protocol.scm
+	$(srcdir)/redis/protocol.scm \
+	$(srcdir)/dbm/redis.scm
 
 TARGET    =
 GENERATED =
@@ -40,7 +41,8 @@ TEST_DIR= $(srcdir)/test
 TEST_SCMS= \
 	$(TEST_DIR)/protocol.scm \
 	$(TEST_DIR)/connection.scm \
-	$(TEST_DIR)/redis.scm
+	$(TEST_DIR)/redis.scm \
+	$(TEST_DIR)/redis-dbm.scm
 TEST_LOG= $(TEST_DIR)/test.log
 
 all : $(TARGET)
