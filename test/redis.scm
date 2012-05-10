@@ -422,7 +422,7 @@
   (test* "redis-sadd(duplicated value)" 0 (redis-sadd redis "s1" "one"))
   (test* "redis-sadd(result)" '#("two" "one") (redis-smembers redis "s1"))
   (test* "redis-sadd(multi values)" 2 (redis-sadd redis "s1" "three" "four" "one" "two"))
-  (test* "redis-sadd(result)" '#("two" "one" "four" "three")  (redis-smembers redis "s1"))
+  (test* "redis-sadd(result)" (sort! '#("one" "two" "three" "four")) (sort! (redis-smembers redis "s1")))
 
   (test-section "save")
   ;; TODO
