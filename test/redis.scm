@@ -78,9 +78,6 @@
   (test* "redis-del(not exist)" 0 (redis-del redis 0))
   (test* "redis-del(multi keys)" 2 (redis-del redis 1 2))
 
-  (test-section "discard")
-  ;; TODO
-
   (test-section "dump")
   ;; TODO
 
@@ -88,9 +85,6 @@
   (test* "redis-echo" "hello" (redis-echo redis "hello"))
 
   (test-section "eval")
-  ;; TODO
-
-  (test-section "exec")
   ;; TODO
 
   (test-section "exists")
@@ -303,9 +297,6 @@
   (test* "redis-msetnx(failure)" 0 (redis-msetnx redis 2 "弐" 3 "参"))
   (test* "redis-msetnx(result)" '#(#f "one" "two" #f)
          (redis-mget redis 0 1 2 3))
-
-  (test-section "multi")
-  ;; TODO
 
   (test-section "object (refcount|encoding|idletime)")
   (redis-flushall redis)
@@ -595,12 +586,6 @@
   (test-section "unsubscribe")
   ;; TODO
 
-  (test-section "unwatch")
-  (test* "unwatch" 'OK (redis-unwatch redis))
-
-  (test-section "watch")
-  ;; TODO
-
   (test-section "zadd")
   ;; TODO
 
@@ -648,6 +633,18 @@
 
   (test-section "zunionstore")
   ;; TODO
+
+  (redis-flushall redis)
+
+  (test-section "Transaction(each command)")
+  (test* "multi(empty transaction)" 'OK (redis-multi redis))
+  (test* "exec(empty transaction)" '#() (redis-exec redis))
+  (test* "exec(orphan)" (test-error) (redis-exec redis))
+  (test* "multi(empty transaction)" 'OK (redis-multi redis))
+  (test* "discard(empty transaction)" 'OK (redis-discard redis))
+  (test* "discard(orphan)" (test-error) (redis-discard redis))
+  (test* "watch" 'OK (redis-watch redis "1" "2" "3" "4"))
+  (test* "unwatch" 'OK (redis-unwatch redis))
 
   (redis-close redis))
 

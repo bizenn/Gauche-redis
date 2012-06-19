@@ -186,3 +186,13 @@
   (zscore (key member))
   (zunionstore (dest numkeys key . keys))
   )
+
+;;
+;; Transactional Block
+;;
+(define (redis-multi-exec redis proc . keys)
+  (unless (null? keys) (apply redis-watch redis keys))
+  (guard (e (else (redis-discard redis)))
+    (redis-multi redis)
+    (proc redis)
+    (redis-exec redis)))
