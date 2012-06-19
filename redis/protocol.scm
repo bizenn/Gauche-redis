@@ -9,6 +9,12 @@
   (export-all))
 (select-module redis.protocol)
 
+(define-condition-type <redis-error> <error>
+  redis-error?)
+
+(define-method object-equal? ((err1 <redis-error>) (err2 <redis-error>))
+  (equal? (slot-ref err1 'message) (slot-ref err2 'message)))
+
 (define (do-command-sync in out cmd . args)
   (apply unified-request out cmd args)
   (parse-reply in))
@@ -31,10 +37,10 @@
   (write-arg out cmd)
   (for-each (cut write-arg out <>) args))
 
-(define (parse-reply in)
+(define (parse-reply in :optional (return-error? #f))
   (case (read-char in)
     ((#\+) (status-reply in))
-    ((#\-) (error-reply in))
+    ((#\-) (error-reply in return-error?))
     ((#\:) (integer-reply in))
     ((#\$) (bulk-reply in))
     ((#\*) (multi-bulk-reply in))
@@ -47,8 +53,11 @@
 (define (status-reply in)
   (string->symbol (read-line in)))
 
-(define (error-reply in)
-  (error (read-line in)))
+(define (error-reply in :optional (return-error? #f))
+  (let1 exc (make-condition <redis-error> 'message (read-line in))
+    (if return-error?
+        exc
+        (raise exc))))
 
 (define (integer-reply in)
   (x->integer (read-line in)))
@@ -65,7 +74,7 @@
   (let* ((count (x->integer (read-line in)))
          (ret (make-vector count)))
     (dotimes (i count)
-      (vector-set! ret i (parse-reply in)))
+      (vector-set! ret i (parse-reply in #t)))
     ret))
 
 (define (read-block-greedily size in)
