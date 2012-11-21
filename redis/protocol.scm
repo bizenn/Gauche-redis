@@ -12,6 +12,13 @@
 (define-condition-type <redis-error> <error>
   redis-error?)
 
+(define-condition-type <redis-multi-error> <redis-error>
+  redis-multi-error?
+  (detail detail-of))
+
+(define-method ref ((e <redis-multi-error>) (idx <integer>) . args)
+  (apply ref (detail-of e) idx args))
+
 (define-method object-equal? ((err1 <redis-error>) (err2 <redis-error>))
   (equal? (slot-ref err1 'message) (slot-ref err2 'message)))
 
@@ -43,12 +50,12 @@
     ((#\-) (error-reply in return-error?))
     ((#\:) (integer-reply in))
     ((#\$) (bulk-reply in))
-    ((#\*) (multi-bulk-reply in))
+    ((#\*) (multi-bulk-reply in return-error?))
     (else
      => (lambda (c)
           (if (eof-object? c)
               c
-              (error "Unknown prefix: " c))))))
+              (error <redis-error> "Unknown prefix: " c))))))
 
 (define (status-reply in)
   (string->symbol (read-line in)))
@@ -70,12 +77,15 @@
            (read-line in) ; ignore
            ))))
 
-(define (multi-bulk-reply in)
+(define (multi-bulk-reply in :optional (return-error? #f))
   (let* ((count (x->integer (read-line in)))
          (ret (make-vector count)))
     (dotimes (i count)
       (vector-set! ret i (parse-reply in #t)))
-    ret))
+    (cond (return-error? ret)
+          ((any condition? (vector->list ret))
+           (error <redis-multi-error> :detail ret "Mult-bulk reply error:"))
+          (else ret))))
 
 (define (read-block-greedily size in)
   (let1 buf (make-u8vector size)

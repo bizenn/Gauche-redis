@@ -411,9 +411,9 @@
   (test* "redis-sadd(first value)" 1 (redis-sadd redis "s1" "one"))
   (test* "redis-sadd(second value)" 1 (redis-sadd redis "s1" "two"))
   (test* "redis-sadd(duplicated value)" 0 (redis-sadd redis "s1" "one"))
-  (test* "redis-sadd(result)" '#("two" "one") (redis-smembers redis "s1"))
+  (test* "redis-sadd(result)" (sort '#("one" "two")) (sort (redis-smembers redis "s1")))
   (test* "redis-sadd(multi values)" 2 (redis-sadd redis "s1" "three" "four" "one" "two"))
-  (test* "redis-sadd(result)" (sort! '#("one" "two" "three" "four")) (sort! (redis-smembers redis "s1")))
+  (test* "redis-sadd(result)" (sort '#("one" "two" "three" "four")) (sort (redis-smembers redis "s1")))
 
   (test-section "save")
   ;; TODO
@@ -645,6 +645,10 @@
   (test* "discard(orphan)" (test-error) (redis-discard redis))
   (test* "watch" 'OK (redis-watch redis "1" "2" "3" "4"))
   (test* "unwatch" 'OK (redis-unwatch redis))
+
+  (redis-flushall redis)
+
+  (test-section "Transactional block")
 
   (redis-close redis))
 

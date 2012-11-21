@@ -192,7 +192,9 @@
 ;;
 (define (redis-multi-exec redis proc . keys)
   (unless (null? keys) (apply redis-watch redis keys))
-  (guard (e (else (redis-discard redis)))
+  (guard (e (else
+             (redis-discard redis)
+             (raise e)))
     (redis-multi redis)
     (proc redis)
     (redis-exec redis)))
