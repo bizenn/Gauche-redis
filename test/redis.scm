@@ -31,7 +31,17 @@
   (test* "redis-ping" 'PONG (redis-ping redis))
 
   (test-section "auth")
-  ;; TODO
+  (let* ((password "secretpassword")
+         (port (+ *bind-port* 10000))
+         (redis-server (begin0
+                         (redis-server-start *redis-server-cmd* port password)
+                         (sys-sleep 1)))
+         (redis (redis-open *bind-address* port)))
+    (test* "before authentication" (test-error) (redis-ping redis))
+    (test* "authentication" 'OK (redis-auth redis password))
+    (test* "after authentication" 'PONG (redis-ping redis))
+    (redis-close redis)
+    (redis-server-stop redis-server))
 
   (test-section "bgrewriteof")
   ;; TODO

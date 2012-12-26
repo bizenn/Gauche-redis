@@ -10,12 +10,13 @@ port ~d
 bind 127.0.0.1
 logfile /dev/null
 dir ./
+~a
 ")
 
-(define (redis-server-start redis-server port)
+(define (redis-server-start redis-server port :optional (requirepass #f))
   (let* ((p (run-process `(,redis-server "-") :redirects '((< 0 stdin))))
          (out (process-input p 'stdin)))
-    (format out *config-format* port)
+    (format out *config-format* port (if requirepass #`"requirepass ,|requirepass|" ""))
     (close-output-port out)
     p))
 
