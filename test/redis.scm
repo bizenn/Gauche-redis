@@ -95,7 +95,8 @@
   (test* "redis-echo" "hello" (redis-echo redis "hello"))
 
   (test-section "eval")
-  ;; TODO
+  (test* "redis-eval" "hello" (redis-eval redis "return ARGV[1] .. 'o'" 0 "hell"))
+  (test* "redis-eval" "hello" (redis-eval redis "return KEYS[1] .. ARGV[1] .. 'o'" 1 "he" "ll"))
 
   (test-section "exists")
   (test* "redis-exists(not exist)" 0 (redis-exists redis 0))
