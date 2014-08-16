@@ -90,6 +90,16 @@
   (until (queue-empty? (ref redis 'recv-queue))
     ((dequeue! (ref redis 'hndl-queue)) (dequeue! (ref redis 'recv-queue)))))
 
+;; !!Experimental - there's no way to unsubscribe, yet...
+(define-method redis-async-set-subscribe-handler! ((redis <redis-async-connection>)
+                                                   proc)
+  (letrec ((proc-rec
+            (lambda args
+              (enqueue! (ref redis 'hndl-queue) proc-rec)
+              (apply proc args))))
+    (enqueue! (ref redis 'hndl-queue) proc-rec)
+    ))
+
 ;; Redis Commands
 (define-redis-commands
   (append (key value))

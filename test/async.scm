@@ -20,7 +20,7 @@
 
 (let1 redis (redis-open-async *bind-address* *bind-port*)
   (test* "redis-open-async" <redis-async-connection> (class-of redis))
-  (test-section "redis-sender-thread")
+  (test-section "redis-async-threads")
   (let ((send-queue (ref redis 'send-queue))
         (recv-queue (ref redis 'recv-queue))
         (hndl-queue (ref redis 'hndl-queue)))
@@ -35,6 +35,33 @@
     (until (queue-empty? hndl-queue)
       (redis-async-update! redis))
     ))
+
+
+(test-section "redis-async-pubsub")
+
+(let ((pub (redis-open *bind-address* *bind-port*))
+      (sub (redis-open-async *bind-address* *bind-port*)))
+
+  ((redis-async-subscribe sub "channel")
+   (lambda (res) (test* "subscribe" '("subscribe" "channel" 1) (vector->list res))))
+  (until (queue-empty? (ref sub 'hndl-queue)) (redis-async-update! sub))
+
+  (redis-async-set-subscribe-handler!
+   sub (let ((count 0))
+         (lambda (res)
+           (test* "subscribe-handler" `("message" "channel" ,(number->string count))
+                  (vector->list res))
+           (inc! count)
+           )))
+
+  (redis-publish pub "channel" "0")
+  (redis-async-update! sub)
+  (redis-publish pub "channel" "1")
+  (redis-async-update! sub)
+  (redis-publish pub "channel" "2")
+  (redis-publish pub "channel" "3")
+  (redis-async-update! sub)
+  )
 
 (redis-server-stop *redis-server*)
 
