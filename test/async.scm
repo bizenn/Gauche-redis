@@ -31,6 +31,7 @@
     (test-section "redis-async")
     ((redis-async-set redis "A" "123") (cut test* "set" 'OK <>))
     ((redis-async-get redis "A") (cut test* "get" "123" <>))
+    ((redis-async-del redis "A") (cut test* "delete" 1 <>))
 
     (until (queue-empty? hndl-queue)
       (redis-async-update! redis))
