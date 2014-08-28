@@ -87,7 +87,7 @@
 
 ;; Run on main thread
 (define-method redis-async-update! ((redis <redis-async-connection>))
-  (until (queue-empty? (ref redis 'recv-queue))
+  (until (or (queue-empty? (ref redis 'recv-queue)) (queue-empty? (ref redis 'hndl-queue)))
     ((dequeue! (ref redis 'hndl-queue)) (dequeue! (ref redis 'recv-queue)))))
 
 ;; !!Experimental

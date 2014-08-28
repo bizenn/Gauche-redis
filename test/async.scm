@@ -60,6 +60,11 @@
   (redis-publish pub "channel" "3")
   ((redis-async-wait-for-publish! sub) (test-eql "2"))
   ((redis-async-wait-for-publish! sub) (test-eql "3"))
+  (redis-publish pub "channel" "4")
+  (redis-async-update! sub)
+  (redis-publish pub "channel" "5")
+  ((redis-async-wait-for-publish! sub) (test-eql "4"))
+  ((redis-async-wait-for-publish! sub) (test-eql "5"))
   (redis-async-update! sub)
   )
 
