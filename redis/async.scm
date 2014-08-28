@@ -25,7 +25,7 @@
                   :send-queue (make-mtqueue)
                   :recv-queue (make-mtqueue)
                   :hndl-queue (make-queue))))
-    (start-threads redis)
+    (start-threads! redis)
     redis
     ))
 
@@ -65,7 +65,7 @@
   (lambda (proc)
     (enqueue! (ref redis 'hndl-queue) proc)))
 
-(define-method start-threads ((redis <redis-async-connection>))
+(define-method start-threads! ((redis <redis-async-connection>))
   ;; send-thread
   (thread-start!
    (make-thread
@@ -90,15 +90,9 @@
   (until (queue-empty? (ref redis 'recv-queue))
     ((dequeue! (ref redis 'hndl-queue)) (dequeue! (ref redis 'recv-queue)))))
 
-;; !!Experimental - there's no way to unsubscribe, yet...
-(define-method redis-async-set-subscribe-handler! ((redis <redis-async-connection>)
-                                                   proc)
-  (letrec ((proc-rec
-            (lambda args
-              (enqueue! (ref redis 'hndl-queue) proc-rec)
-              (apply proc args))))
-    (enqueue! (ref redis 'hndl-queue) proc-rec)
-    ))
+;; !!Experimental
+(define-method redis-async-wait-for-publish! ((redis <redis-async-connection>))
+  (lambda (proc) (enqueue! (ref redis 'hndl-queue) proc)))
 
 ;; Redis Commands
 (define-redis-commands

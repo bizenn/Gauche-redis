@@ -43,24 +43,23 @@
 (let ((pub (redis-open *bind-address* *bind-port*))
       (sub (redis-open-async *bind-address* *bind-port*)))
 
+  (define (test-eql x)
+    (lambda (res) (test* "subscribe" `("message" "channel" ,x) (vector->list res))))
+
   ((redis-async-subscribe sub "channel")
    (lambda (res) (test* "subscribe" '("subscribe" "channel" 1) (vector->list res))))
   (until (queue-empty? (ref sub 'hndl-queue)) (redis-async-update! sub))
 
-  (redis-async-set-subscribe-handler!
-   sub (let ((count 0))
-         (lambda (res)
-           (test* "subscribe-handler" `("message" "channel" ,(number->string count))
-                  (vector->list res))
-           (inc! count)
-           )))
-
   (redis-publish pub "channel" "0")
+  ((redis-async-wait-for-publish! sub) (test-eql "0"))
   (redis-async-update! sub)
   (redis-publish pub "channel" "1")
+  ((redis-async-wait-for-publish! sub) (test-eql "1"))
   (redis-async-update! sub)
   (redis-publish pub "channel" "2")
   (redis-publish pub "channel" "3")
+  ((redis-async-wait-for-publish! sub) (test-eql "2"))
+  ((redis-async-wait-for-publish! sub) (test-eql "3"))
   (redis-async-update! sub)
   )
 
