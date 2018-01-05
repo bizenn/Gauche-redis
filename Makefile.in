@@ -26,6 +26,7 @@ SCMFILES  = \
 	$(srcdir)/redis.scm \
 	$(srcdir)/redis/connection.scm \
 	$(srcdir)/redis/protocol.scm \
+	$(srcdir)/redis/async.scm \
 	$(srcdir)/dbm/redis.scm
 
 TARGET    =
@@ -42,6 +43,7 @@ TEST_SCMS= \
 	$(TEST_DIR)/protocol.scm \
 	$(TEST_DIR)/connection.scm \
 	$(TEST_DIR)/redis.scm \
+	$(TEST_DIR)/async.scm \
 	$(TEST_DIR)/redis-dbm.scm
 TEST_LOG= $(TEST_DIR)/test.log
 
